@@ -1,0 +1,200 @@
+// BIT
+template<typename T>
+class FenwickTree {
+public:
+    vector<T> tree;
+    int n;
+ 
+    void init(int n) {
+        tree.assign(n + 2, 0);
+        this->n = n;
+    }
+ 
+    T merge(T &x, T &y) { return x + y; }
+ 
+    void add(int x, T val) {
+        for (; x <= n; x += x & -x) {
+            tree[x] = merge(tree[x], val);
+        }
+    }
+ 
+    T sum(int x) {
+        if (x <= 0)return 0;
+        T ret = 0;
+        for (; x; x -= x & -x) {
+            ret = merge(ret, tree[x]);
+        }
+        return ret;
+    }
+ 
+    T sum(int l, int r) {
+        return sum(r) - sum(l - 1);
+    }
+ 
+    int search(ll x) {
+        int pos = 0;
+        for (int sz = (1 << __lg(n)); sz > 0 && x; sz >>= 1) {
+            if (pos + sz <= n && tree[pos + sz] < x) {
+                x -= tree[pos + sz];
+                pos += sz;
+            }
+        }
+        return pos + 1;
+    }
+};
+
+// 01 2DBIT - holds large N
+typedef pair<long long, long long> pii;
+typedef tree<pii, null_type, less<pii>, rb_tree_tag, tree_order_statistics_node_update> OST;
+ 
+ 
+#define int long long
+#define ll long long
+ 
+struct BIT2D {
+    int n;
+    vector<OST> tree;
+ 
+    void init(int _n) {
+        n = _n;
+        tree.resize(n+1);
+    }
+ 
+    void insert(int a, int b) {
+        for (int i = a; i <= n; i += i & -i)
+            tree[i].insert( make_pair(b, a) );
+    }
+ 
+    void remove(int a, int b) {
+        for (int i = a; i <= n; i += i & -i)
+            tree[i].erase( make_pair(b, a) );
+    }
+ 
+    int sum(int a, int b) {
+        int ans = 0;
+        for (int i = a; i > 0; i -= i & -i)
+            ans += tree[i].order_of_key( make_pair(b + 1, 0) );
+        return ans;
+    }
+ 
+    int sum(int r1, int c1, int r2, int c2) {
+        return sum(r2, c2) - sum(r2, c1 - 1) - sum(r1 - 1, c2) + sum(r1 - 1, c1 - 1);
+    }
+ 
+ 
+};
+ 
+ 
+// 1 indexed : init, and (r, c) parameters validation
+struct BIT2D {
+    int n, m;
+    vector<vector<int>> tree;
+ 
+    void init(int _n, int _m) {
+        n = _n, m = _m;
+        tree.assign(n+1, vector<int>(m+1));
+    }
+ 
+    void add(int r, int c, int value) {
+        for ( ; r <= n; r += r & -r)
+            for (int i = c; i <= m; i += i & -i)
+                tree[r][i] += value;
+    }
+ 
+    int sum(int r, int c) {
+        int sum = 0;
+        for ( ; r > 0; r -= r & -r)
+            for ( int i = c; i > 0; i -= i & -i)
+                sum += tree[r][i];
+        return sum;
+    }
+ 
+    int sum(int r1, int c1, int r2, int c2) {
+        return sum(r2, c2) - sum(r2, c1 - 1) - sum(r1 - 1, c2) + sum(r1 - 1, c1 - 1);
+    }
+};
+
+// BIT 2D WITH OUT PAIR!
+
+#include <ext/pb_ds/tree_policy.hpp>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/rope>
+
+using namespace std;
+using namespace __gnu_pbds;
+using namespace __gnu_cxx;
+ 
+template<class T> using Tree = tree<T, null_type, less<T>, rb_tree_tag,tree_order_statistics_node_update>;
+ 
+const int N = 2e5 + 5;
+struct BIT2D {
+    int n;
+    Tree<int>  tree[N];
+ 
+ 
+    void insert(int a, int b) {
+        for (int i = ++a; i < N; i += i & -i)
+            tree[i].insert( b);
+    }
+ 
+    void remove(int a, int b) {
+        for (int i = ++a; i < N; i += i & -i)
+            tree[i].erase( b);
+    }
+ 
+    int sum(int a, int b) {
+        int ans = 0;
+        for (int i = ++a; i > 0; i -= i & -i)
+            ans += tree[i].order_of_key( b+1);
+        return ans;
+    }
+ 
+    int sum(int r1, int c1, int r2, int c2) {
+        return sum(r2, c2) - sum(r2, c1 - 1) - sum(r1 - 1, c2) + sum(r1 - 1, c1 - 1);
+    }
+ 
+ 
+};
+
+struct BIT3D {
+    int n, m, c;
+    vector<vector<vector<int>>> tree;
+
+    void init(int _n, int _m, int _c) {
+        n = _n, m = _m, c = _c;
+        tree.assign(n+1, vector<vector<int>>(m+1, vector<int>(c+1, 0)));
+    }
+
+    void add(int x, int y, int z, int value) {
+        for (; x <= n; x += x & -x) {
+            for (int i = y; i <= m; i += i & -i) {
+                for (int j = z; j <= c; j += j & -j) {
+                    tree[x][i][j] += value;
+                }
+            }
+        }
+    }
+
+    int sum(int x, int y, int z) {
+        int sum = 0;
+        for (; x > 0; x -= x & -x) {
+            for (int i = y; i > 0; i -= i & -i) {
+                for (int j = z; j > 0; j -= j & -j) {
+                    sum += tree[x][i][j];
+                }
+            }
+        }
+        return sum;
+    }
+
+    int sum(int x1, int y1, int z1, int x2, int y2, int z2) {
+        return  sum(x2, y2, z2)
+         - sum(x1-1, y2, z2)
+         - sum(x2, y1-1, z2)
+         - sum(x2, y2, z1-1)
+         + sum(x1-1, y1-1, z2)
+         + sum(x1-1, y2, z1-1)
+         + sum(x2, y1-1, z1-1)
+         - sum(x1-1, y1-1, z1-1);
+    }
+};
