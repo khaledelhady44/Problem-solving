@@ -1,0 +1,116 @@
+struct Node{
+    int sum; int lazy;
+    int has_lazy;
+    Node(){
+        sum = 0;
+        lazy = 1;
+        has_lazy = 0;
+    }
+    Node(int x) {
+        sum = x;
+        lazy = 1;
+        has_lazy = 0;
+    }
+ 
+    void update(int val, int lx, int rx){
+        sum = val * (rx - lx);
+        lazy = val;
+        has_lazy = 1;
+    }
+};
+ 
+struct SegTree{
+    int tree_size;
+    vector<Node> SegData;
+ 
+    SegTree(int n){
+        tree_size = 1;
+        while(tree_size < n) tree_size *= 2;
+        SegData.assign(2*tree_size, Node());
+    }
+ 
+    void init(vector<long long> & nums, int ni, int lx, int rx) {
+ 
+        if(rx - lx == 1)
+        {
+            if(lx < (int)nums.size())
+            {
+                SegData[ni] = Node(nums[lx]);
+            }
+            return;
+        }
+ 
+        int mid = lx + (rx - lx) / 2;
+        init(nums, 2 * ni + 1, lx, mid);
+        init(nums, 2 * ni + 2, mid, rx);
+ 
+        SegData[ni] = merge(SegData[2 * ni + 1], SegData[2 * ni + 2]);
+    }
+ 
+    void init(vector<int> & nums)
+    {
+        init(nums, 0, 0, tree_size);
+    }
+ 
+ 
+    Node merge(Node &lf, Node &ri){
+        Node ans = Node();
+        ans.sum = lf.sum + ri.sum;
+        return ans;
+    }
+ 
+    void propagate(int ni, int lx, int rx) {
+        if (rx - lx == 1 || !SegData[ni].has_lazy) return;
+ 
+        int mid = (lx + rx) / 2;
+        int val = SegData[ni].lazy;
+        SegData[2*ni+1].update(val, lx, mid);
+        SegData[2*ni+2].update(val, mid, rx);
+ 
+        SegData[ni].lazy = 1;
+        SegData[ni].has_lazy = 0;
+    }
+ 
+    void set(int l, int r, int val, int ni, int lx, int rx){
+        propagate(ni, lx, rx);
+ 
+        int mid = (rx + lx) / 2;
+ 
+        if (lx >= l && rx <= r) {
+            SegData[ni].update(val, lx, rx);
+            return;
+        }
+        if (lx >= r || rx <= l) return;
+ 
+        set(l, r, val, 2*ni+1, lx, mid);
+        set(l, r, val, 2*ni+2, mid, rx);
+ 
+        SegData[ni] = merge(SegData[2*ni+1], SegData[2*ni+2]);
+    }
+ 
+    void set(int l, int r, int val){
+        set(l, r, val, 0, 0, tree_size);
+    }
+ 
+    Node get(int l, int r, int ni, int lx, int rx){
+        propagate(ni, lx, rx);
+ 
+        int mid = (rx + lx) / 2;
+        if(lx >= l && rx <= r)
+            return SegData[ni];
+        if(lx >= r || rx <= l)
+            return Node();
+ 
+        Node lf = get(l, r, 2*ni+1, lx, mid);
+        Node ri = get(l, r, 2*ni+2, mid, rx);
+ 
+        return merge(lf, ri);
+    }
+ 
+    int get(int l, int r){
+        return get(l, r, 0, 0, tree_size).sum;
+    }
+ 
+};
+ 
+ 
