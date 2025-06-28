@@ -1,0 +1,85 @@
+const int N = 3e5+5;
+int cnt_jumps = 20;
+vector<vector<int>> graph;
+int parent[N], depth[N];
+vector<vector<int>> jumps;
+int a[N];
+ 
+void dfs(int root, int p) {
+    for (auto ch: graph[root]) {
+        if (ch == p) continue;
+        parent[ch] = root;
+        depth[ch] = depth[root] + 1;
+        dfs(ch, root, pst, new_root);
+    }
+}
+ 
+int get_ancestor(int node, int jump) {
+    if (depth[node] < jump) return -1;
+ 
+    int mx_bit = log2(jump);
+    for (int bit = mx_bit; bit >= 0; bit--) {
+        if (((jump>>bit) & 1) == 1) {
+            node = jumps[node][bit];
+        }
+    }
+ 
+    return node;
+}
+ 
+int get_lca(int u, int v) {
+    if (depth[v] < depth[u]) swap(u, v);
+ 
+    v = get_ancestor(v, depth[v] - depth[u]);
+ 
+    if (v == u) return u;
+ 
+    int u_new, v_new;
+    for (int k = cnt_jumps; k >= 0; k--) {
+        u_new = jumps[u][k];
+        v_new = jumps[v][k];
+        if (u_new != v_new) {
+            u = u_new;
+            v = v_new;
+        }
+    }
+ 
+    return parent[u];
+}
+
+ 
+void solve() {
+    int n, q;
+    cin >> n >> q;
+ 
+    for (int i = 1; i <= n; i++) cin >> a[i];
+ 
+ 
+    graph.assign(n+1, {});
+    jumps.clear();
+    jumps.resize(n+1, vector<int>(cnt_jumps+1));
+ 
+    int u, v;
+    for (int i = 0; i < n-1; i++) {
+        cin >> u >> v;
+        graph[u].push_back(v);
+        graph[v].push_back(u);
+    }
+ 
+
+    depth[1] = 0;
+    parent[1] = 0;
+    dfs(1, 0, pst, roots[0]);
+ 
+    for (int node = 1; node <= n; node++) jumps[node][0] = parent[node];
+ 
+    for (int k = 1; k <= cnt_jumps; k++) {
+        for (int node = 1; node <= n; node++) {
+            jumps[node][k] = jumps[jumps[node][k-1]][k-1];
+        }
+    }
+
+}
+ 
+ 
+ 

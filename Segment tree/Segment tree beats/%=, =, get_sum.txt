@@ -1,0 +1,119 @@
+
+struct Node{
+    int mx, sum;
+    Node(){
+        mx = sum = 0;
+    }
+    Node(int x) {
+        mx = sum = x;
+    }
+
+    void change(int x){
+        mx = sum = x;
+    }
+
+    void change_mod(int x) {
+        mx %= x;
+        sum = mx;
+    }
+};
+
+struct SegTree{
+    int tree_size;
+    vector<Node> SegData;
+
+    SegTree(int n){
+        tree_size = 1;
+        while(tree_size < n) tree_size *= 2;
+        SegData.assign(2*tree_size, Node());
+    }
+
+    void init(vector<long long> & nums, int ni, int lx, int rx) {
+
+        if(rx - lx == 1)
+        {
+            if(lx < (int)nums.size())
+            {
+                SegData[ni] = Node(nums[lx]);
+            }
+            return;
+        }
+
+        int mid = lx + (rx - lx) / 2;
+        init(nums, 2 * ni + 1, lx, mid);
+        init(nums, 2 * ni + 2, mid, rx);
+
+        SegData[ni] = merge(SegData[2 * ni + 1], SegData[2 * ni + 2]);
+    }
+
+    void init(vector<int> & nums)
+    {
+        init(nums, 0, 0, tree_size);
+    }
+
+    Node merge(Node &lf, Node &ri){
+        Node ans = Node();
+        ans.mx = max(lf.mx, ri.mx);
+        ans.sum = lf.sum + ri.sum;
+
+        return ans;
+    }
+
+    void set(int idx, int val, int ni, int lx, int rx){
+        int mid = (rx + lx) / 2;
+
+        if(rx - lx == 1) {
+            SegData[ni].change(val);
+            return;
+        }
+
+        if (idx < mid) set(idx, val, 2*ni+1, lx, mid);
+        else set(idx, val, 2*ni+2, mid, rx);
+
+        SegData[ni] = merge(SegData[2*ni+1], SegData[2*ni+2]);
+    }
+
+    void set(int idx, int val){
+        set(idx, val, 0, 0, tree_size);
+    }
+
+    void set_mod(int l, int r, int val, int ni, int lx, int rx) {
+
+        if(lx >= r || rx <= l || SegData[ni].mx < val) return;
+
+        if (rx - lx == 1) {
+            SegData[ni].change_mod(val);
+            return;
+        }
+        int mid = (rx + lx) / 2;
+
+        set_mod(l, r, val, 2*ni+1, lx, mid);
+        set_mod(l, r, val, 2*ni+2, mid, rx);
+
+        SegData[ni] = merge(SegData[2*ni+1], SegData[2*ni+2]);
+
+    }
+
+    void set_mod(int l, int r, int val) {
+        set_mod(l, r, val, 0, 0, tree_size);
+    }
+
+    Node get(int l, int r, int ni, int lx, int rx){
+        int mid = (rx + lx) / 2;
+        if(lx >= l && rx <= r)
+            return SegData[ni];
+        if(lx >= r || rx <= l)
+            return Node();
+
+        Node lf = get(l, r, 2*ni+1, lx, mid);
+        Node ri = get(l, r, 2*ni+2, mid, rx);
+
+        return merge(lf, ri);
+    }
+
+    int get(int l, int r){
+        return get(l, r, 0, 0, tree_size).sum;
+    }
+
+};
+

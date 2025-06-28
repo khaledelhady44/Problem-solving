@@ -1,0 +1,34 @@
+struct DSU{
+ 
+    int cnt = 0;
+    vector<int> parent, sizes, down;
+ 
+    void init(int n){
+        parent.resize(n);
+        down.resize(n);
+        sizes.resize(n, 1);
+        cnt = n;
+        for(int i = 1; i < n; i++) parent[i] = down[i] = i;
+    }
+ 
+    int find_root(int u){
+        if(parent[u] == u) return u;
+        return parent[u] = find_root(parent[u]);
+    }
+ 
+    int merge(int u, int v){
+        int root_u = find_root(u), root_v = find_root(v);
+        if(root_u == root_v){
+            return 0;
+        }
+        if(sizes[root_u] > sizes[root_v]){
+            swap(root_u, root_v);
+        }
+ 
+        parent[root_u] = root_v;
+        sizes[root_v] += sizes[root_u];
+        down[root_v] = max(down[root_v], down[root_u]);
+        cnt--;
+        return 1;
+    }
+};

@@ -1,0 +1,76 @@
+
+
+struct Node {
+
+};
+
+
+
+// end is included in this template
+struct PST {
+};
+
+
+const int N = 3e5+5;
+int cnt_jumps = 20;
+vector<vector<int>> graph;
+int parent[N], depth[N];
+Node* node_to_root[N];
+vector<vector<int>> jumps;
+int a[N];
+
+void dfs(int root, int p, PST &pst, Node* cur_root) {
+    Node* new_root = pst.set(cur_root, a[root], 1);
+    node_to_root[root] = new_root;
+    for (auto ch: graph[root]) {
+        if (ch == p) continue;
+        parent[ch] = root;
+        depth[ch] = depth[root] + 1;
+        dfs(ch, root, pst, new_root);
+    }
+}
+void solve() {
+    int n, q;
+    cin >> n >> q;
+
+    for (int i = 1; i <= n; i++) cin >> a[i];
+
+    PST pst(n+10);
+    vector<Node*> roots;
+    roots.push_back(new Node());
+
+
+    graph.assign(n+1, {});
+
+
+    int u, v;
+    for (int i = 0; i < n-1; i++) {
+        cin >> u >> v;
+        graph[u].push_back(v);
+        graph[v].push_back(u);
+    }
+
+    node_to_root[0] = roots[0];
+    depth[1] = 0;
+    parent[1] = 0;
+    dfs(1, 0, pst, roots[0]);
+
+  }
+
+
+signed main() {
+     ios_base::sync_with_stdio(false);
+     cin.tie(nullptr);
+     cout.tie(nullptr);
+
+    // freopen("farm.in", "r", stdin);
+    // freopen("b1ank.out", "w", stdout);
+
+    int t;
+    t = 1;
+    cin >> t;
+    for (int te = 1; te <= t; ++te) {
+        // cout << "Case " << test << ":\n";
+        solve();
+    }
+}

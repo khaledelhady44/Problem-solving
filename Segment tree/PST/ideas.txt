@@ -1,0 +1,36 @@
+1- find kth smallest number in a range
+-> build the pst by indexes and then getKth from root[l-1] to root[r]
+
+2- count elements greater than k
+-> first solution: build pst by putting first large values to small values, then binary search the element k to find the correct segment that have only elements equal or larger than k (the segment itself will be for the array)
+-> second solution: build pst by indexes and get elements greater than k in root[r] and in root[l-1] then subtract  (the segment itself will be for values)
+
+
+3- Distinct values queries
+-> first solution: change the array by converting every a[i] to be (index of prev occur of a[i])
+ then build pst to count in a range how many elements less than l in range [l, r] this will count first occurances only.
+
+-> second solution: build the segment by simply looping over indexes from left to right, when you face a number that has existed before, go put zero in the last occurance and keep only the current. This will count you last occurances. and this is so useful because the segment will be the array. You can use that to get the sum of unique elements or the product(Boring queries). or only care about the last k occurances for example (prob: army creation).
+
+
+4- sign on fence -> in this promblem the idea was to build a pst for the maximum subarray regular segment. (build the segment from larger values to smaller ones and binary search for the root using lower bound)
+
+5- TREE!
+build the pst for a tree and then use lca for example to query any path you would like.
+
+6- xor_hashing
+(Hossam and Range Minimum Query)
+
+
+7 - get element that occured only once
+simply put in the last occurace of the element the index of the second to last occur
+then search in the full range by function getKth
+keep going to right as you can so that you can get the right most element with a value less than l
+if the right most element is actually smaller than L (at the left of the range) then no element.
+
+8- Boring queryies
+to get lcm in range
+make a regualr segment to keep freq of primes less than or equal to sqrt(max)
+
+then use pst to get the answer of larger primes which will occur only once or don't occur at all
+use idea 3 second solution

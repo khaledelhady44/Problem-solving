@@ -1,0 +1,138 @@
+#include <bits/stdc++.h>
+
+
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+#define getrand(l, r) uniform_int_distribution<long long>(l, r)(rng)
+
+const int MOD = 1000000007;
+
+
+struct Node {
+    Node *l, *r;
+    int val = 0;
+
+    Node(int val): l(NULL), r(NULL), val(val) {}
+    Node(): l(NULL), r(NULL) {}
+    Node(Node *l, Node *r): l(l), r(r) {
+        if (l != NULL) val ^= l->val;  ###################
+        if (r != NULL) val ^= r->val;  ##################
+    }
+
+    void addChild() {
+        l = new Node();
+        r = new Node();
+    }
+};
+
+
+
+// end is included in this template
+struct PST {
+    int n;
+
+    PST(int n): n(n + 1) {
+    }
+
+    Node merge(Node lf, Node ri) {
+        Node ans;
+        ans.val = lf.val ^ ri.val;
+        return ans;
+    }
+
+    Node *set(Node *v, int i, int val, int lx, int rx) {
+        if (lx == rx) return new Node(val ^ v->val); ###############################
+        int mid = (lx + rx) / 2;
+        if (!v->l) v->addChild();
+        if (i <= mid) return new Node(set(v->l, i, val, lx, mid), v->r);
+        return new Node(v->l, set(v->r, i, val, mid + 1, rx));
+    }
+
+    Node *set(Node *v, int i, int val) { return set(v, i, val, 0, n - 1); }
+
+    Node query(Node *v, int l, int r, int lx, int rx) {
+        if (l > rx || r < lx) return {};
+        if (l <= lx && r >= rx) return *v;
+
+        if (!v->l) v->addChild();
+        int mid = (lx + rx) / 2;
+        return merge(query(v->l, l, r, lx, mid), query(v->r, l, r, mid + 1, rx));
+    }
+
+    Node query(Node *v, int l, int r) { return query(v, l, r, 0, n - 1); }
+
+    int getKth(Node *a, Node *b, int k, int lx, int rx) {
+        if (lx == rx) return lx;
+        if(!a->l) a->addChild();
+        if(!b->l) b->addChild();
+
+        int mid = (lx + rx) / 2;
+        if (a->l->val != b->l->val) return getKth(a->l, b->l, k, lx, mid);##############################
+        return getKth(a->r, b->r, k, mid + 1, rx);
+    }
+
+    int getKth(Node *a, Node *b, int k) { return getKth(a, b, k, 0, n - 1); }
+
+};
+
+void solve() {
+    int n;
+    cin >> n;
+
+    vector<int> a(n);
+    set<int> values;
+    map<int, int> hashing;
+    for (int i = 0; i < n; i++) {
+        cin >> a[i];
+        values.insert(a[i]);
+        hashing[a[i]] = getrand(0, 2e18);
+
+    }
+
+    int id = 0;
+    map<int, int> compress, rev_comp;
+    for (auto val: values) {
+        compress[val] = id;
+        rev_comp[id++] = val;
+    }
+
+    PST pst(id);
+    vector<Node *> roots;
+    roots.push_back(new Node());
+
+    for (int i = 0; i < n; i++) {
+        roots.push_back(pst.set(roots.back(), compress[a[i]], hashing[a[i]]));
+    }
+
+    int q;
+    cin >> q;
+
+    int l, r;
+    int last = 0;
+    while (q--) {
+        cin >> l >> r;
+        l ^= last;
+        r ^= last;
+
+        last = rev_comp[pst.getKth(roots[l-1], roots[r], 0)];
+        cout <<  last << endl;
+
+    }
+}
+
+
+signed main() {
+     ios_base::sync_with_stdio(false);
+     cin.tie(nullptr);
+     cout.tie(nullptr);
+
+    // freopen("farm.in", "r", stdin);
+    // freopen("b1ank.out", "w", stdout);
+
+    int t;
+    t = 1;
+    // cin >> t;
+    for (int te = 1; te <= t; ++te) {
+        // cout << "Case " << test << ":\n";
+        solve();
+    }
+}

@@ -1,0 +1,74 @@
+Efficient Non-Increasing Sequence Recovery of Length n with a[i] <= n/i
+
+int n;
+
+complexity O(n+sqrt(n) + c)
+find_k has complexity c
+
+find_k is simply the function where you can get only one element of the array in linear time maybe.
+ 
+int find_k(int k, vector<int> &a) {
+    vector<int> freq(n+1);
+    int unique = 0;
+    int ans = 0;
+    int start = 0, end = 0;
+    while (start < a.size()) {
+        while (end < a.size() && !(!freq[a[end]] && unique == k)) {
+            if (!freq[a[end]]) {
+                unique++;
+            }
+            freq[a[end]]++;
+            end++;
+        }
+        ans++;
+        while (start < end) {
+            freq[a[start]]--;
+            if (freq[a[start]] == 0) unique--;
+            start++;
+        }
+    }
+    // cout << k << " " << ans << endl;
+    return ans;
+}
+ 
+void get_ans(int l, int r, vector<int> &ans, vector<int> &a) {
+    if (l > r) {
+        return;
+    }
+    if (ans[l-1] == ans[r+1]) {
+        for (int i = l; i <= r; i++) {
+            ans[i] = ans[l-1];
+        }
+        return;
+    }
+ 
+    int mid = (l + r) / 2;
+    ans[mid] = find_k(mid, a);
+    get_ans(l, mid-1, ans, a);
+    get_ans(mid+1, r, ans, a);
+}
+ 
+ 
+ 
+void solve()
+{
+ 
+    cin >> n;
+    vector<int> a(n);
+    for(int i = 0; i < n; i++) cin >> a[i];
+ 
+    vector<int> ans(n+2);
+    ans[0] = n+1;
+    ans[n+1] = 0;
+ 
+    get_ans(1, n, ans, a);
+ 
+    for (int i = 1; i <= n; i++) {
+        cout << ans[i] << " ";
+    }
+    cout << endl;
+ 
+ 
+}
+ 
+ 
