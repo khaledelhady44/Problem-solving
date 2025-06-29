@@ -1,0 +1,194 @@
+
+const int oo = 1e16+4;
+
+struct Node{
+    int sum, mx, second_mx, cnt_mx;
+    int has_lazy_mx;
+
+    int lazy_sum, has_lazy_sum;
+    Node(){
+        sum = 0;
+        mx = -oo + 1;
+        second_mx = -oo;
+        cnt_mx = 0;
+        has_lazy_mx = 0;
+        lazy_sum = 0;
+        has_lazy_sum = 0;
+    }
+    Node(int x) {
+        sum = x;
+        mx = x;
+        second_mx = -oo;
+        cnt_mx = 1;
+        has_lazy_mx = 0;
+        lazy_sum = 0;
+        has_lazy_sum = 0;
+    }
+
+    void update_mx(int val, int lx, int rx){
+        if (mx > val) {
+            sum -= (mx - val) * cnt_mx;
+            mx = val;
+            has_lazy_mx = 1;
+        }
+    }
+
+    void update_sum(int val, int lx, int rx) {
+        sum += val * (rx - lx);
+        mx += val;
+        if (second_mx != -oo) second_mx += val;
+        lazy_sum += val;
+        has_lazy_sum = 1;
+    }
+};
+
+struct SegTree{
+    int tree_size;
+    vector<Node> SegData;
+
+    SegTree(int n){
+        tree_size = 1;
+        while(tree_size < n) tree_size *= 2;
+        SegData.assign(2*tree_size, Node());
+    }
+
+    void init(vector<long long> & nums, int ni, int lx, int rx) {
+
+        if(rx - lx == 1)
+        {
+            if(lx < (int)nums.size())
+            {
+                SegData[ni] = Node(nums[lx]);
+            }
+            return;
+        }
+
+        int mid = lx + (rx - lx) / 2;
+        init(nums, 2 * ni + 1, lx, mid);
+        init(nums, 2 * ni + 2, mid, rx);
+
+        SegData[ni] = merge(SegData[2 * ni + 1], SegData[2 * ni + 2]);
+    }
+
+    void init(vector<int> & nums)
+    {
+        init(nums, 0, 0, tree_size);
+    }
+
+
+    Node merge(Node &lf, Node &ri){
+        Node ans = Node();
+        ans.sum = lf.sum + ri.sum;
+        if (lf.mx > ri.mx) {
+            ans.mx = lf.mx;
+            ans.cnt_mx = lf.cnt_mx;
+            if (lf.second_mx > ri.mx) {
+                ans.second_mx = lf.second_mx;
+            } else {
+                ans.second_mx = ri.mx;
+            }
+        } else if (lf.mx < ri.mx) {
+            ans.mx = ri.mx;
+            ans.cnt_mx = ri.cnt_mx;
+            if (ri.second_mx > lf.mx) {
+                ans.second_mx = ri.second_mx;
+            } else {
+                ans.second_mx = lf.mx;
+            }
+        } else {
+            ans.mx = lf.mx;
+            ans.cnt_mx = lf.cnt_mx + ri.cnt_mx;
+            if (lf.second_mx > ri.second_mx) {
+                ans.second_mx = lf.second_mx;
+            } else {
+                ans.second_mx = ri.second_mx;
+            }
+        }
+
+        return ans;
+    }
+
+    void propagate(int ni, int lx, int rx) {
+        if (rx - lx == 1) return;
+
+        int mid = (lx + rx) / 2;
+
+        if (SegData[ni].has_lazy_sum) {
+            int val = SegData[ni].lazy_sum;
+            SegData[2*ni+1].update_sum(val, lx, mid);
+            SegData[2*ni+2].update_sum(val, mid, rx);
+            SegData[ni].has_lazy_sum = 0;
+            SegData[ni].lazy_sum = 0;
+        }
+
+        if (SegData[ni].has_lazy_mx) {
+            int val = SegData[ni].mx;
+            SegData[2*ni+1].update_mx(val, lx, mid);
+            SegData[2*ni+2].update_mx(val, mid, rx);
+            SegData[ni].has_lazy_mx = 0;
+        }
+    }
+
+    void set_mx(int l, int r, int val, int ni, int lx, int rx){
+        if (lx >= r || rx <= l || SegData[ni].mx <= val) return;
+        propagate(ni, lx, rx);
+
+        int mid = (rx + lx) / 2;
+
+        if (lx >= l && rx <= r && SegData[ni].second_mx < val) {
+            SegData[ni].update_mx(val, lx, rx);
+            return;
+        }
+
+        set_mx(l, r, val, 2*ni+1, lx, mid);
+        set_mx(l, r, val, 2*ni+2, mid, rx);
+
+        SegData[ni] = merge(SegData[2*ni+1], SegData[2*ni+2]);
+    }
+
+    void set_mx(int l, int r, int val){
+        set_mx(l, r, val, 0, 0, tree_size);
+    }
+
+    void set_sum(int l, int r, int val, int ni, int lx, int rx){
+        if (lx >= r || rx <= l) return;
+        propagate(ni, lx, rx);
+
+        int mid = (rx + lx) / 2;
+
+        if (lx >= l && rx <= r) {
+            SegData[ni].update_sum(val, lx, rx);
+            return;
+        }
+
+        set_sum(l, r, val, 2*ni+1, lx, mid);
+        set_sum(l, r, val, 2*ni+2, mid, rx);
+
+        SegData[ni] = merge(SegData[2*ni+1], SegData[2*ni+2]);
+    }
+
+    void set_sum(int l, int r, int val){
+        set_sum(l, r, val, 0, 0, tree_size);
+    }
+
+    Node get(int l, int r, int ni, int lx, int rx){
+        propagate(ni, lx, rx);
+
+        int mid = (rx + lx) / 2;
+        if(lx >= l && rx <= r)
+            return SegData[ni];
+        if(lx >= r || rx <= l)
+            return Node();
+
+        Node lf = get(l, r, 2*ni+1, lx, mid);
+        Node ri = get(l, r, 2*ni+2, mid, rx);
+
+        return merge(lf, ri);
+    }
+
+    int get(int l, int r){
+        return get(l, r, 0, 0, tree_size).sum;
+    }
+
+};
+
