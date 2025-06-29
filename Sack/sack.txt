@@ -1,0 +1,82 @@
+// in small to large, you keep for every node a D.S that contains info it needs. O(n*log*log)
+// in sack, you have only one global item of this D.S and you start to add or remove. O(n*log)
+// remember that in small to large you need to answer queries during dfs, because you swap things, So, take queries offline first.
+// All you need to change is update function and answer queries, remember to call pre and dfs.
+const int N = 100010;
+int n, m;
+int a[N], ans[N], big[N], sz[N];
+vector<pair<int, int>> queries[N];
+vector<int> graph[N];
+
+// put your Data structure
+ 
+ 
+void pre(int root, int p) { // CALL THIS!
+    sz[root] = 1;
+    for (auto ch: graph[root]) {
+        if (ch == p) continue;
+        pre(ch, root);
+        sz[root] += sz[ch];
+        if (sz[ch] > sz[big[root]]) {
+            big[root] = ch;
+        }
+    }
+}
+ 
+// this is the function where you remove a node or add it to the global D.S
+void update(int node, int d) { // change this
+    if (d == -1) {
+        
+    }
+
+   if ( d == 1)
+ }
+ 
+void collect(int u, int p, int d) {
+    update(u, d); // merge the node or remove it
+    for (auto ch: graph[u]) {
+        if (ch != p) collect(ch, u,  d);
+    }
+}
+ 
+ 
+void dfs(int root, int parent, int keep) {
+    for (auto ch: graph[root]) {
+        if (ch == parent || ch == big[root]) continue;
+        dfs(ch, root, 0);
+    }
+ 
+    // add big if exists and keep it
+    if (big[root] != 0) {
+        dfs(big[root], root, 1);
+    }
+ 
+    // collect all except big because it's already merged
+    update(root, 1);
+    for (auto ch: graph[root]) {
+        if (ch == parent || ch == big[root]) continue;
+        collect(ch, root,  1);
+    }
+ 
+    for (auto [i, k]: queries[root]){
+        ans[i] = freq_freq[k];
+    }
+ 
+    // remove light edges
+    if (!keep) {
+        collect(root, parent,   -1);
+    }
+ 
+}
+ 
+ 
+ 
+signed main() {
+
+    pre(1, 1);
+    dfs(1, -1, 1);
+ 
+
+ 
+ 
+}
