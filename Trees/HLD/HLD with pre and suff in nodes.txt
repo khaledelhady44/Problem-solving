@@ -1,0 +1,127 @@
+const int N = 2e5 + 10;
+SegTree st = SegTree(N);
+struct HLD {
+    vector<int> big, head, sz, par, id, dep;
+ 
+    HLD(int n, const vector<vector<int>> &graph): big(n+1), head(n+1), sz(n+1, 1), par(n+1), dep(n+1), id(n+1) {
+        dfs(1, graph);
+        int nxt = 0;
+        head[1] = 1;
+        flatten(1, graph, nxt);
+    }
+ 
+    void dfs(int root, const vector<vector<int>> &graph) {
+        for (int ch: graph[root]) {
+            if (ch == par[root]) continue;
+            par[ch] = root;
+            dep[ch] = dep[root] + 1;
+            dfs(ch, graph);
+            sz[root] += sz[ch];
+            if (big[root] == 0 || sz[ch] > sz[big[root]]) big[root] = ch;
+        }
+    }
+ 
+    void  flatten(int root, const vector<vector<int>> &graph, int &nxt) {
+        id[root] = nxt++;
+        if (big[root]) {
+            head[big[root]] = head[root];
+            flatten(big[root], graph, nxt);
+        }
+ 
+        for (int ch: graph[root]) {
+            if (ch == par[root] || ch == big[root]) continue;
+            head[ch] = ch;
+            flatten(ch, graph, nxt);
+        }
+    }
+ 
+    int query(int u, int v, int k) {
+        vector<pair<int, int>> a, b;
+        while (true) {
+            if (head[v] == head[u]) {
+                if (dep[u] > dep[v]) {
+                    a.emplace_back(id[v], id[u]);
+                } else {
+                    b.emplace_back(id[u], id[v]);
+                }
+ 
+ 
+                reverse(a.begin(), a.end());
+                reverse(b.begin(), b.end());
+ 
+                Node ans = Node();
+                for (auto p: a) {
+                    Node cur = st.get(p.first, p.second+1);
+                    ans = st.merge(ans, cur);
+                }
+ 
+                swap(ans.pre, ans.suff);
+                swap(ans.mn_pre, ans.mn_suff);
+ 
+                for (auto p: b) {
+                    Node cur = st.get(p.first, p.second+1);
+                    ans = st.merge(ans, cur);
+                }
+ 
+                return ans.mn <= k && k <= ans.mx;
+ 
+            }
+ 
+            if (dep[head[u]] > dep[head[v]]) {
+                a.emplace_back(id[head[u]], id[u]);
+                u = par[head[u]];
+            } else {
+                b.emplace_back(id[head[v]], id[v]);
+                v = par[head[v]];
+            }
+ 
+        }
+    }
+};
+
+void solve() {
+    int n;
+    cin >> n;
+    vector<int> values(n+10), time(n+10);
+    vector<query> queries;
+    vector<vector<int>> graph(n+10);
+ 
+    char type;
+    int u, v, x, k;
+    int cur = 1;
+    values[cur] = 1;
+    time[cur] = 0;
+    for (int i = 1; i <= n; i++) {
+        cin >> type;
+        if (type == '+') {
+            cur++;
+            cin >> v >> x;
+            values[cur] = x;
+            time[cur] = i;
+            graph[v].push_back(cur);
+            graph[cur].push_back(v);
+        } else {
+            cin >> u >> v >> k;
+            queries.push_back({u, v, k, i});
+        }
+    }
+ 
+    HLD hld = HLD(n+3, graph);
+ 
+    for (int i = 1; i <= cur; i++) {
+        st.set(hld.id[i], values[i]);
+    }
+ 
+    for (auto q: queries) {
+        if (q.time > time[q.u] && q.time > time[q.v]) {
+            int ans = hld.query(q.u, q.v, q.k);
+            if (ans) cout << "YES\n";
+            else cout << "NO\n";
+        } else {
+            cout << "NO\n";
+        }
+    }
+ 
+ 
+ 
+}

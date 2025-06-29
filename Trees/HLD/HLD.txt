@@ -1,0 +1,123 @@
+const int N = 1e5 + 10;
+// SegTree st = SegTree(N); put your D.S
+struct HLD {
+    vector<int> big, head, sz, par, id, dep;
+
+    HLD(int n, const vector<vector<int>> &graph): big(n+1), head(n+1), sz(n+1, 1), par(n+1), dep(n+1), id(n+1) {
+        dfs(1, graph);
+        int nxt = 0;
+        head[1] = 1;
+        flatten(1, graph, nxt);
+    }
+
+    void dfs(int root, const vector<vector<int>> &graph) {
+        for (int ch: graph[root]) {
+            if (ch == par[root]) continue;
+            par[ch] = root;
+            dep[ch] = dep[root] + 1;
+            dfs(ch, graph);
+            sz[root] += sz[ch];
+            if (big[root] == 0 || sz[ch] > sz[big[root]]) big[root] = ch;
+        }
+    }
+
+    void  flatten(int root, const vector<vector<int>> &graph, int &nxt) {
+        id[root] = nxt++;
+        if (big[root]) {
+            head[big[root]] = head[root];
+            flatten(big[root], graph, nxt);
+        }
+
+        for (int ch: graph[root]) {
+            if (ch == par[root] || ch == big[root]) continue;
+            head[ch] = ch;
+            flatten(ch, graph, nxt);
+        }
+    }
+	
+    // to get ordered path
+    vector<pair<int, int>> get_path(int u, int v) {
+        vector<pair<int, int>> a, b, path;
+        while (true) {
+            if (head[v] == head[u]) {
+                if (dep[u] > dep[v]) {
+                    a.emplace_back(id[v], id[u]);
+                } else {
+                    b.emplace_back(id[u], id[v]);
+                }
+
+
+                reverse(b.begin(), b.end());
+
+                for (auto p: a) {
+                    path.push_back(p);
+                }
+                for (auto p: b) {
+                    path.push_back(p);
+                }
+
+                return path;
+
+
+            }
+
+            if (dep[head[u]] > dep[head[v]]) {
+                a.emplace_back(id[head[u]], id[u]);
+                u = par[head[u]];
+            } else {
+                b.emplace_back(id[head[v]], id[v]);
+                v = par[head[v]];
+            }
+
+        }
+    }
+};
+
+void solve() {
+
+    int n, q;
+    cin >> n >> q;
+    vector<vector<int>> graph(n+1);
+
+    int u, v;
+    for (int i = 0; i < n-1; i++) {
+        cin >> u >> v;
+        graph[u].push_back(v);
+        graph[v].push_back(u);
+    }
+
+    HLD hld = HLD(n, graph);
+
+    vector<int> nodes(n);
+    for (int i = 1; i <= n; i++) {
+        nodes[hld.id[i]] = i;
+    }
+
+
+    int t, i, val;
+    while (q--) {
+        cin >> t;
+        if (t == 0) {
+            cin >> i;
+            st.set(hld.id[i]);
+        } else {
+            cin >> v;
+            vector<pair<int, int>> path = hld.get_path(1, v);
+
+            for (auto p: path) {
+                if (st.get_sum(p.first, p.second+1).sum) {
+                    int id = st.get_ans(1 + st.get_sum(0, p.first).sum);
+                    cout << nodes[id] << endl;
+                    goto end;
+                }
+            }
+            cout << -1 << endl;
+            end:;
+
+        }
+
+
+    }
+
+
+}
