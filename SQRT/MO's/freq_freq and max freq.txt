@@ -1,0 +1,75 @@
+vector<long long> queries_ans;
+vector<long long> arr;
+
+// n number of array elements, m number of queries
+int n, m;
+int freq[100010], freq_freq[100010];
+
+// store in this variable the current query answer
+long long ans = 0; // a neutral value as initial;
+
+void add(int ind) {
+    ++freq_freq[++freq[arr[ind]]];
+    ans = max(ans, freq[arr[ind]]);
+}
+
+void del(int ind) {
+    freq_freq[freq[arr[ind]]--]--;
+
+    if (!freq_freq[ans]) {
+        ans--;
+    }
+}
+
+struct Query {
+    int l, r, iq;
+};
+
+vector<int> MO(vector<Query> &Q) {
+    const int SQ = ceil(sqrt(n)) + 1;
+    sort(Q.begin(), Q.end(),
+         [&](const Query &x, const Query &y) -> bool {
+             return make_pair(x.l / SQ, x.r) < make_pair(y.l / SQ, y.r);
+         }
+    );
+    vector<int> res(Q.size());
+
+    int l = Q[0].l, r = Q[0].l;
+
+    add(l);
+
+    for (auto const &[lq, rq, iq]: Q) {
+        while (r < rq) add(++r);
+        while (l < lq) del(l++);
+        while (lq < l) add(--l);
+        while (rq < r) del(r--);
+
+        res[iq] = ans;
+    }
+    return res;
+}
+
+
+void solve() {
+    cin >> n >> m;
+
+    arr.resize(n + 5);
+
+    for (int i = 0; i < n; ++i) {
+        cin >> arr[i];
+    }
+
+    vector<Query> queries(m);
+    queries_ans.resize(m);
+    
+    for (int i = 0; i < m; ++i) {
+        int l, r;
+        cin >> l >> r;
+        queries[i] = {l, r, i};
+    }
+    auto res = MO(queries);
+
+    for (int i = 0; i < m; ++i) {
+        cout << res[i] << endl;
+    }
+}
